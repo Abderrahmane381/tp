@@ -1,36 +1,35 @@
 import serial
 import paho.mqtt.client as mqtt
 import time
-# Configuration du port série (remplacez '/dev/ttyUSB0' par le port de votre Arduino)
-SERIAL_PORT = "/dev/ttyUSB0"
+
+SERIAL_PORT = "/dev/ttyACM0" # Your Arduino port
 BAUD_RATE = 9600
-# Configuration MQTT
-BROKER = "mqtt.eclipseprojects.io" # Remplacez par votre broker
+
+# We are using a public, free broker for this TP
+BROKER = "mqtt.eclipseprojects.io" 
 PORT = 1883
-TOPIC = "moniot/luminosite"
-CLIENT_ID = "Raspberry_LDR"
-# Connexion série et MQTT
+TOPIC = "fstt/student/luminosite" # PRO TIP: Change this to something unique!
+CLIENT_ID = "Raspberry_LDR_Tangier"
+
 try:
-ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-client = mqtt.Client(CLIENT_ID)
-client.connect(BROKER, PORT, 60)
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    client = mqtt.Client(CLIENT_ID)
+    client.connect(BROKER, PORT, 60)
+    print("Connected to Broker!")
 except Exception as e:
-print(f"Erreur de connexion : {e}")
-exit()
-
-3
+    print(f"Connection Error: {e}")
+    exit()
 
 try:
-while True:
-if ser.in_waiting > 0:
-# Lecture des données de l'Arduino
-data = ser.readline().decode('utf-8').strip()
-print(f"Luminosité : {data}")
-# Envoi des données au broker MQTT
-client.publish(TOPIC, data)
-time.sleep(1)
+    while True:
+        if ser.in_waiting > 0:
+            data = ser.readline().decode('utf-8').strip()
+            print(f"Sending to MQTT: {data}")
+            # This line sends the data to the cloud post office
+            client.publish(TOPIC, data)
+            time.sleep(1) # Wait 1 second between sends
 except KeyboardInterrupt:
-print("Arrêt du programme.")
+    print("Stopping...")
 finally:
-ser.close()
-client.disconnect()
+    ser.close()
+    client.disconnect()
